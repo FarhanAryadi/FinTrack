@@ -7,7 +7,7 @@
 		"start": "node dist/index.js",
 		"dev": "ts-node-dev --respawn --transpile-only src/index.ts",
 		"build": "tsc -p tsconfig.json",
-		"postinstall": "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=0 prisma generate --schema=./prisma/schema.prisma && PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=0 prisma db push --schema=./prisma/schema.prisma --accept-data-loss",
+		"postinstall": "prisma generate --schema=./prisma/schema.prisma",
 		"seed": "ts-node src/seed.ts"
 	},
 	"prisma": {
