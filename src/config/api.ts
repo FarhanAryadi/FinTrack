@@ -5,10 +5,8 @@ const getBaseUrl = () => {
 	const LOCAL_URL = `http://${LOCAL_IP}:3000/api`;
 
 	// URL untuk produksi di Railway
-	// Catatan: Ganti dengan URL Railway Anda setelah deployment
-	// Format: https://finance-tracker-api-production.up.railway.app/api
-	const RAILWAY_URL =
-		'https://finance-tracker-api-production.up.railway.app/api';
+	// Ganti dengan URL Railway Anda yang sebenarnya
+	const RAILWAY_URL = 'https://web-production-248b.up.railway.app/api';
 
 	// Gunakan URL produksi jika aplikasi di-build untuk produksi
 	if (__DEV__) {

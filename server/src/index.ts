@@ -1,8 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import express from 'express';
 import categoryRoutes from './routes/categoryRoutes';
 import transactionRoutes from './routes/transactions';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
