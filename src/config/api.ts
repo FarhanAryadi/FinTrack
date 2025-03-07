@@ -4,17 +4,19 @@ const getBaseUrl = () => {
 	const LOCAL_IP = '192.168.100.13';
 	const LOCAL_URL = `http://${LOCAL_IP}:3000/api`;
 
-	// URL untuk produksi (ganti dengan URL server Anda setelah di-deploy)
-	// Contoh: https://finance-tracker-api.onrender.com/api
-	// atau: https://finance-tracker-api.herokuapp.com/api
-	const PRODUCTION_URL = 'https://finance-tracker-api.onrender.com/api';
+	// URL untuk produksi di Railway
+	// Catatan: Ganti dengan URL Railway Anda setelah deployment
+	// Format: https://finance-tracker-api-production.up.railway.app/api
+	const RAILWAY_URL =
+		'https://finance-tracker-api-production.up.railway.app/api';
 
 	// Gunakan URL produksi jika aplikasi di-build untuk produksi
 	if (__DEV__) {
 		return LOCAL_URL;
 	}
 
-	return PRODUCTION_URL;
+	// Gunakan Railway URL untuk produksi
+	return RAILWAY_URL;
 };
 
 export const API_CONFIG = {

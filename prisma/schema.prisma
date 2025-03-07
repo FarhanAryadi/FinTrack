@@ -1,7 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["fintrack"]
+  schemas  = ["public"]
 }
 
 generator client {
@@ -21,7 +21,7 @@ model Transaction {
   categoryId  String?
   Category    Category? @relation(fields: [categoryId], references: [id])
 
-  @@schema("fintrack")
+  @@schema("public")
 }
 
 model Category {
@@ -33,5 +33,5 @@ model Category {
   updatedAt   DateTime      @updatedAt
   transactions Transaction[]
 
-  @@schema("fintrack")
+  @@schema("public")
 } 
