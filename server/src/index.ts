@@ -18,7 +18,7 @@ app.use(express.json());
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '0.0.0.0'; // Listen on all network interfaces
 
 app.listen(PORT, HOST, () => {
