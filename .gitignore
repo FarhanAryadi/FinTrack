@@ -56,3 +56,6 @@ yarn-error.log*
 # Build artifacts
 android/
 ios/
+
+#  history
+.history/

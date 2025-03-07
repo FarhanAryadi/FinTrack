@@ -10,6 +10,9 @@
 		"postinstall": "prisma generate",
 		"seed": "ts-node src/seed.ts"
 	},
+	"prisma": {
+		"seed": "ts-node src/seed.ts"
+	},
 	"dependencies": {
 		"@prisma/client": "^5.10.2",
 		"cors": "^2.8.5",
