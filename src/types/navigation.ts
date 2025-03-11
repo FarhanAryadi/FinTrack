@@ -3,7 +3,6 @@ import { Transaction } from './transaction';
 
 export type RootStackParamList = {
 	Transactions: NavigatorScreenParams<TransactionsStackParamList>;
-	Add: undefined;
 };
 
 export type TransactionsStackParamList = {

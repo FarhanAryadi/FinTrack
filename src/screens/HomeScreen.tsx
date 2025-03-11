@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { format } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
 	ActivityIndicator,
@@ -25,7 +26,6 @@ const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
 	const navigation = useNavigation();
-	const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('INCOME');
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
@@ -33,9 +33,6 @@ const HomeScreen = () => {
 	const [income, setIncome] = useState(0);
 	const [expense, setExpense] = useState(0);
 	const [error, setError] = useState<string | null>(null);
-	const [activePeriod, setActivePeriod] = useState<
-		'daily' | 'monthly' | 'yearly'
-	>('monthly');
 
 	const fetchTransactions = useCallback(async () => {
 		try {
@@ -88,112 +85,63 @@ const HomeScreen = () => {
 		fetchTransactions();
 	}, [fetchTransactions]);
 
-	// Calculate summary data
-	const calculateSummary = () => {
-		const today = new Date();
-		const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-		const startOfWeek = new Date(today);
-		startOfWeek.setDate(today.getDate() - today.getDay());
-		startOfWeek.setHours(0, 0, 0, 0);
-		const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-		let dayTotal = 0;
-		let weekTotal = 0;
-		let monthTotal = 0;
-
-		const filteredTransactions = transactions.filter(
-			(t) => t.type === activeTab
-		);
-
-		filteredTransactions.forEach((transaction) => {
-			const transactionDate = new Date(transaction.date);
-
-			if (transactionDate >= startOfDay) {
-				dayTotal += transaction.amount;
-			}
-
-			if (transactionDate >= startOfWeek) {
-				weekTotal += transaction.amount;
-			}
-
-			if (transactionDate >= startOfMonth) {
-				monthTotal += transaction.amount;
-			}
-		});
-
-		return {
-			day: dayTotal,
-			week: weekTotal,
-			month: monthTotal,
-		};
-	};
-
-	const summaryData = calculateSummary();
-
-	// Get filtered transactions
-	const getFilteredTransactions = () => {
+	// Get recent transactions
+	const getRecentTransactions = () => {
 		return transactions
-			.filter((t) => t.type === activeTab)
 			.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 			.slice(0, 5);
 	};
 
 	return (
 		<View style={styles.container}>
-			<StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
+			<StatusBar
+				barStyle="light-content"
+				backgroundColor={colors.primary.main}
+			/>
 
 			{/* Header */}
 			<View style={styles.header}>
-				<TouchableOpacity style={styles.menuButton}>
-					<MaterialCommunityIcons name="menu" size={24} color="#333" />
-				</TouchableOpacity>
-
-				<View style={styles.balanceContainer}>
-					<Text style={styles.balanceAmount}>{formatCurrency(balance)}</Text>
-					<TouchableOpacity style={styles.balanceDropdown}>
-						<Text style={styles.balanceLabel}>Total Saldo</Text>
+				{/* <View style={styles.headerTop}>
+					<TouchableOpacity>
 						<MaterialCommunityIcons
-							name="chevron-down"
-							size={16}
-							color="#999"
+							name="menu"
+							size={24}
+							color={colors.text.inverse}
 						/>
 					</TouchableOpacity>
-				</View>
+					<Text style={styles.headerTitle}>
+						Wallet{' '}
+						<MaterialCommunityIcons
+							name="chevron-down"
+							size={20}
+							color={colors.text.inverse}
+						/>
+					</Text>
+					<TouchableOpacity>
+						<MaterialCommunityIcons
+							name="bell-outline"
+							size={24}
+							color={colors.text.inverse}
+						/>
+					</TouchableOpacity>
+				</View> */}
 
-				<TouchableOpacity style={styles.notificationButton}>
-					<MaterialCommunityIcons name="bell-outline" size={24} color="#333" />
-				</TouchableOpacity>
+				<View style={styles.balanceSection}>
+					<Text style={styles.balanceLabel}>Account Balance</Text>
+					<Text style={styles.balanceAmount}>{formatCurrency(balance)}</Text>
+				</View>
 			</View>
 
-			{/* Tab Selector */}
-			<View style={styles.tabContainer}>
-				<TouchableOpacity
-					style={[styles.tab, activeTab === 'EXPENSE' && styles.activeTab]}
-					onPress={() => setActiveTab('EXPENSE')}
-				>
-					<Text
-						style={[
-							styles.tabText,
-							activeTab === 'EXPENSE' && styles.activeTabText,
-						]}
-					>
-						Pengeluaran
-					</Text>
-				</TouchableOpacity>
-
-				<TouchableOpacity
-					style={[styles.tab, activeTab === 'INCOME' && styles.activeTab]}
-					onPress={() => setActiveTab('INCOME')}
-				>
-					<Text
-						style={[
-							styles.tabText,
-							activeTab === 'INCOME' && styles.activeTabText,
-						]}
-					>
-						Pemasukan
-					</Text>
-				</TouchableOpacity>
+			{/* Summary Cards */}
+			<View style={styles.summaryRow}>
+				<View style={[styles.summaryItem, styles.incomeItem]}>
+					<Text style={styles.summaryLabel}>Total Income</Text>
+					<Text style={styles.summaryValue}>{formatCurrency(income)}</Text>
+				</View>
+				<View style={[styles.summaryItem, styles.expenseItem]}>
+					<Text style={styles.summaryLabel}>Total Expense</Text>
+					<Text style={styles.summaryValue}>{formatCurrency(expense)}</Text>
+				</View>
 			</View>
 
 			{loading && !refreshing ? (
@@ -227,68 +175,126 @@ const HomeScreen = () => {
 						/>
 					}
 				>
-					{/* Summary */}
-					<View style={styles.summaryContainer}>
-						<View
-							style={[styles.dailySummaryItem, { backgroundColor: '#FFF4D4' }]}
-						>
-							<Text style={[styles.summaryLabel, { color: '#B7934A' }]}>
-								Hari
-							</Text>
-							<Text
-								style={[
-									styles.summaryValue,
-									styles.dailyValue,
-									{ color: '#8B7355' },
-								]}
-							>
-								{formatCurrency(summaryData.day)}
-							</Text>
-						</View>
-						<View style={styles.weekMonthContainer}>
-							<View
-								style={[
-									styles.summaryItem,
-									{ backgroundColor: '#E8F4FF', marginRight: 8 },
-								]}
-							>
-								<Text style={[styles.summaryLabel, { color: '#5B8DB8' }]}>
-									Minggu
-								</Text>
-								<Text style={[styles.summaryValue, { color: '#2C5282' }]}>
-									{formatCurrency(summaryData.week)}
-								</Text>
+					{/* Chart Section */}
+					<View style={styles.chartSection}>
+						<View style={styles.chartContainer}>
+							{/* Simplified Bar Chart */}
+							<View style={styles.barChartContainer}>
+								{['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'].map(
+									(month, index) => (
+										<View key={index} style={styles.barColumn}>
+											<View style={styles.barGroup}>
+												{/* Income bar */}
+												<View
+													style={[
+														styles.bar,
+														styles.incomeBar,
+														{ height: [70, 90, 60, 80, 40, 100, 60][index] },
+													]}
+												/>
+												{/* Expense bar */}
+												<View
+													style={[
+														styles.bar,
+														styles.expenseBar,
+														{ height: [50, 60, 40, 30, 80, 50, 30][index] },
+													]}
+												/>
+												{/* Highlight for June */}
+												{month === 'Jun' && (
+													<View style={styles.barHighlight}>
+														<Text style={styles.barHighlightText}>Rp 75,000</Text>
+													</View>
+												)}
+											</View>
+											<Text style={styles.barLabel}>{month}</Text>
+										</View>
+									)
+								)}
 							</View>
-							<View
-								style={[styles.summaryItem, { backgroundColor: '#E7F5E8' }]}
-							>
-								<Text style={[styles.summaryLabel, { color: '#4A9D5B' }]}>
-									Bulan
-								</Text>
-								<Text style={[styles.summaryValue, { color: '#276749' }]}>
-									{formatCurrency(summaryData.month)}
-								</Text>
+
+							{/* Y-axis labels */}
+							<View style={styles.yAxisLabels}>
+								<Text style={styles.yAxisLabel}>25k</Text>
+								<Text style={styles.yAxisLabel}>20k</Text>
+								<Text style={styles.yAxisLabel}>15k</Text>
+								<Text style={styles.yAxisLabel}>10k</Text>
+								<Text style={styles.yAxisLabel}>5k</Text>
+								<Text style={styles.yAxisLabel}>0k</Text>
 							</View>
 						</View>
 					</View>
 
 					{/* Recent Transactions */}
-					<View style={styles.transactionsContainer}>
-						<Text style={styles.transactionsTitle}>Transaksi Terbaru</Text>
+					<View style={styles.transactionsSection}>
+						<View style={styles.transactionsHeader}>
+							<Text style={styles.transactionsTitle}>Recent Transaction</Text>
+							<TouchableOpacity>
+								<Text style={styles.viewAllText}>View all</Text>
+							</TouchableOpacity>
+						</View>
 
-						{getFilteredTransactions().length === 0 ? (
+						{getRecentTransactions().length === 0 ? (
 							<View style={styles.emptyContainer}>
 								<Text style={styles.emptyText}>Belum ada transaksi</Text>
 							</View>
 						) : (
-							getFilteredTransactions().map((transaction) => (
-								<TransactionCard
-									key={transaction.id}
-									transaction={transaction}
-									onPress={() => {
-										// Handle transaction press
-									}}
-								/>
+							getRecentTransactions().map((transaction) => (
+								<View key={transaction.id} style={styles.transactionItem}>
+									<View
+										style={[
+											styles.transactionIconContainer,
+											{
+												backgroundColor:
+													transaction.type === 'INCOME'
+														? colors.success.surface
+														: colors.danger.surface,
+											},
+										]}
+									>
+										<MaterialCommunityIcons
+											name={
+												transaction.type === 'INCOME' ? 'cash-multiple' : 'food'
+											}
+											size={24}
+											color={
+												transaction.type === 'INCOME'
+													? colors.transaction.income.main
+													: colors.transaction.expense.main
+											}
+										/>
+									</View>
+									<View style={styles.transactionDetails}>
+										<Text style={styles.transactionCategory}>
+											{transaction.Category?.name || transaction.category}
+										</Text>
+										<Text style={styles.transactionDescription}>
+											{transaction.description || 'No description'}
+										</Text>
+									</View>
+									<View style={styles.transactionAmountContainer}>
+										<Text
+											style={[
+												styles.transactionAmount,
+												{
+													color:
+														transaction.type === 'INCOME'
+															? colors.transaction.income.main
+															: colors.transaction.expense.main,
+												},
+											]}
+										>
+											{transaction.type === 'INCOME' ? '' : '-'}
+											{formatCurrency(transaction.amount)}
+										</Text>
+										<Text style={styles.transactionDate}>
+											{format(
+												new Date(transaction.date),
+												'dd-MMM-yyyy | hh:mm a'
+											)}
+										</Text>
+									</View>
+								</View>
 							))
 						)}
 					</View>
@@ -304,167 +310,236 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f5f7fa',
+		backgroundColor: colors.background,
 	},
 	header: {
+		backgroundColor: colors.primary.main,
+		paddingTop: 80,
+		paddingBottom: 20,
+		borderBottomLeftRadius: 20,
+		borderBottomRightRadius: 20,
+	},
+	headerTop: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		paddingHorizontal: 16,
-		paddingTop: 16,
-		paddingBottom: 8,
+		marginBottom: 10,
 	},
-	menuButton: {
-		padding: 8,
+	headerTitle: {
+		fontSize: 18,
+		fontWeight: '600',
+		color: colors.text.inverse,
 	},
-	balanceContainer: {
-		alignItems: 'center',
-	},
-	balanceAmount: {
-		fontSize: 24,
-		fontWeight: 'bold',
-		color: '#333',
-	},
-	balanceDropdown: {
-		flexDirection: 'row',
+	balanceSection: {
+		paddingHorizontal: 16,
+		top: -40,
 		alignItems: 'center',
 	},
 	balanceLabel: {
 		fontSize: 14,
-		color: '#999',
-		marginRight: 4,
-	},
-	notificationButton: {
-		padding: 8,
-	},
-	tabContainer: {
-		flexDirection: 'row',
-		paddingHorizontal: 16,
-		marginTop: 16,
+		color: colors.text.inverse,
 		marginBottom: 8,
 	},
-	tab: {
-		paddingVertical: 8,
-		paddingHorizontal: 16,
-		borderRadius: 20,
-		marginRight: 8,
+	balanceAmount: {
+		fontSize: 28,
+		fontWeight: 'bold',
+		color: colors.text.inverse,
 	},
-	activeTab: {
-		backgroundColor: '#000',
-	},
-	tabText: {
-		fontSize: 14,
-		color: '#666',
-	},
-	activeTabText: {
-		color: '#fff',
-		fontWeight: '500',
-	},
-	periodContainer: {
+	summaryRow: {
 		flexDirection: 'row',
-		backgroundColor: '#f5f5f5',
-		borderRadius: 30,
-		padding: 4,
-		marginHorizontal: 16,
-		marginTop: 8,
-		marginBottom: 16,
+		justifyContent: 'space-between',
+		paddingHorizontal: 16,
+		marginTop: -20,
+		marginBottom: 20,
+		zIndex: 10,
 	},
-	periodTab: {
-		flex: 1,
-		paddingVertical: 8,
-		paddingHorizontal: 12,
-		borderRadius: 30,
+	summaryItem: {
+		borderRadius: 10,
+		padding: 12,
+		width: '45%',
+		marginVertical: -15,
+		marginHorizontal: 10,
 		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 3,
 	},
-	periodTabActive: {
-		backgroundColor: '#fff',
+	incomeItem: {
+		backgroundColor: colors.success.main,
 	},
-	periodTabInactive: {
-		backgroundColor: 'transparent',
+	expenseItem: {
+		backgroundColor: colors.danger.main,
 	},
-	periodTabText: {
+	summaryLabel: {
+		fontSize: 15,
+		color: colors.text.inverse,
+		marginBottom: 4,
+	},
+	summaryValue: {
 		fontSize: 14,
-		color: '#999',
-	},
-	periodTabTextActive: {
-		color: '#333',
-		fontWeight: '500',
+		fontWeight: 'bold',
+		color: colors.text.inverse,
 	},
 	content: {
 		flex: 1,
-		paddingHorizontal: 16,
-		paddingBottom: 80,
+	},
+	chartSection: {
+		backgroundColor: colors.card,
+		borderRadius: 15,
+		margin: 16,
+		padding: 16,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.05,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	chartContainer: {
+		flexDirection: 'row',
+		height: 180,
+		marginTop: 10,
+	},
+	barChartContainer: {
+		flex: 1,
+		flexDirection: 'row',
+		alignItems: 'flex-end',
+		justifyContent: 'space-around',
+		paddingLeft: 30,
+	},
+	barColumn: {
+		alignItems: 'center',
+		width: 30,
+	},
+	barGroup: {
+		flexDirection: 'row',
+		alignItems: 'flex-end',
+		justifyContent: 'center',
+		width: '100%',
+	},
+	bar: {
+		width: 8,
+		borderRadius: 4,
+		marginHorizontal: 1,
+	},
+	incomeBar: {
+		backgroundColor: colors.success.main,
+	},
+	expenseBar: {
+		backgroundColor: colors.primary.light,
+	},
+	barHighlight: {
+		position: 'absolute',
+		top: -25,
+		backgroundColor: colors.text.primary,
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+		borderRadius: 4,
+	},
+	barHighlightText: {
+		color: colors.text.inverse,
+		fontSize: 10,
+		fontWeight: 'bold',
+	},
+	barLabel: {
+		fontSize: 10,
+		color: colors.text.secondary,
+		marginTop: 5,
+	},
+	yAxisLabels: {
+		position: 'absolute',
+		left: 0,
+		top: 0,
+		bottom: 20,
+		justifyContent: 'space-between',
+	},
+	yAxisLabel: {
+		fontSize: 10,
+		color: colors.text.secondary,
+		width: 30,
+	},
+	transactionsSection: {
+		marginHorizontal: 16,
+		marginTop: 0,
+	},
+	transactionsHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 12,
+		paddingHorizontal: 4,
+	},
+	transactionsTitle: {
+		fontSize: 16,
+		fontWeight: 'bold',
+		color: colors.text.primary,
+	},
+	viewAllText: {
+		fontSize: 12,
+		color: colors.primary.main,
+	},
+	transactionItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: colors.card,
+		borderRadius: 12,
+		padding: 12,
+		marginBottom: 10,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.05,
+		shadowRadius: 2,
+		elevation: 2,
+	},
+	transactionIconContainer: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginRight: 12,
+	},
+	transactionDetails: {
+		flex: 1,
+	},
+	transactionCategory: {
+		fontSize: 14,
+		fontWeight: '600',
+		color: colors.text.primary,
+	},
+	transactionDescription: {
+		fontSize: 12,
+		color: colors.text.secondary,
+		marginTop: 2,
+	},
+	transactionAmountContainer: {
+		alignItems: 'flex-end',
+	},
+	transactionAmount: {
+		fontSize: 14,
+		fontWeight: '600',
+	},
+	transactionDate: {
+		fontSize: 10,
+		color: colors.text.secondary,
+		marginTop: 2,
 	},
 	loadingContainer: {
 		flex: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
 	},
-	summaryContainer: {
-		marginTop: 16,
-		marginBottom: 16,
-		paddingHorizontal: 4,
-	},
-	dailySummaryItem: {
-		borderRadius: 16,
-		padding: 24,
-		alignItems: 'center',
-		marginBottom: 12,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
-	},
-	weekMonthContainer: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-	},
-	summaryItem: {
-		flex: 1,
-		borderRadius: 16,
-		padding: 20,
-		alignItems: 'center',
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
-	},
-	summaryLabel: {
-		fontSize: 14,
-		marginBottom: 8,
-	},
-	summaryValue: {
-		fontSize: 18,
-		fontWeight: 'bold',
-	},
-	dailyValue: {
-		fontSize: 32,
-	},
-	transactionsContainer: {
-		marginBottom: 24,
-	},
-	transactionsTitle: {
-		fontSize: 18,
-		fontWeight: 'bold',
-		color: '#333',
-		marginBottom: 12,
-	},
 	emptyContainer: {
-		backgroundColor: '#fff',
+		backgroundColor: colors.card,
 		borderRadius: 16,
 		padding: 24,
 		alignItems: 'center',
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
 	},
 	emptyText: {
 		fontSize: 16,
-		color: '#999',
+		color: colors.text.secondary,
 	},
 	errorContainer: {
 		flex: 1,
@@ -486,7 +561,7 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 	},
 	retryButtonText: {
-		color: '#fff',
+		color: colors.text.inverse,
 		fontSize: 16,
 		fontWeight: '500',
 	},

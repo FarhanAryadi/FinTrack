@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -29,9 +30,13 @@ const { width } = Dimensions.get('window');
 
 type AddTransactionScreenProps = {
 	navigation: NativeStackNavigationProp<RootStackParamList, 'Add'>;
+	route: RouteProp<RootStackParamList, 'Add'>;
 };
 
-const AddTransactionScreen = ({ navigation }: AddTransactionScreenProps) => {
+const AddTransactionScreen = ({
+	navigation,
+	route,
+}: AddTransactionScreenProps) => {
 	const [type, setType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 	const [amount, setAmount] = useState('');
 	const [description, setDescription] = useState('');
@@ -49,7 +54,12 @@ const AddTransactionScreen = ({ navigation }: AddTransactionScreenProps) => {
 
 	useEffect(() => {
 		fetchBalance();
-	}, []);
+
+		// Set transaction type based on navigation parameter
+		if (route.params?.transactionType) {
+			setType(route.params.transactionType === 'income' ? 'INCOME' : 'EXPENSE');
+		}
+	}, [route.params]);
 
 	const fetchBalance = async () => {
 		try {

@@ -1,154 +1,262 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import {
 	Animated,
 	Dimensions,
 	StyleSheet,
+	Text,
 	TouchableOpacity,
+	TouchableWithoutFeedback,
 	View,
 } from 'react-native';
+import { colors } from '../../constants/colors';
+import AddTransactionModal from '../modals/AddTransactionModal';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const BottomNavigation = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
-	const animatedValues = {
-		home: new Animated.Value(route.name === 'Home' ? 1 : 0),
-		profile: new Animated.Value(route.name === 'Profile' ? 1 : 0),
-		chat: new Animated.Value(route.name === 'Chat' ? 1 : 0),
-		settings: new Animated.Value(route.name === 'Settings' ? 1 : 0),
-	};
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [animation] = useState(new Animated.Value(0));
+	const [showIncomeModal, setShowIncomeModal] = useState(false);
+	const [showExpenseModal, setShowExpenseModal] = useState(false);
 
-	const animateIcon = (
-		icon: keyof typeof animatedValues,
-		routeName: string
-	) => {
-		// Reset all animations
-		Object.keys(animatedValues).forEach((key) => {
-			Animated.spring(animatedValues[key as keyof typeof animatedValues], {
-				toValue: 0,
-				useNativeDriver: true,
-				friction: 8,
-				tension: 40,
-			}).start();
-		});
-
-		// Animate selected icon
-		Animated.spring(animatedValues[icon], {
-			toValue: 1,
-			friction: 5,
-			tension: 40,
-			useNativeDriver: true,
-		}).start();
-
+	const navigateTo = (routeName: string) => {
 		navigation.navigate(routeName as never);
 	};
 
-	const getAnimatedStyle = (icon: keyof typeof animatedValues) => {
-		return {
-			transform: [
-				{
-					scale: animatedValues[icon].interpolate({
-						inputRange: [0, 1],
-						outputRange: [1, 1.2],
-					}),
-				},
-				{
-					translateY: animatedValues[icon].interpolate({
-						inputRange: [0, 1],
-						outputRange: [0, -4],
-					}),
-				},
-			],
-			opacity: animatedValues[icon].interpolate({
-				inputRange: [0, 1],
-				outputRange: [0.5, 1],
-			}),
-		};
+	const isActive = (routeName: string) => {
+		return route.name === routeName;
+	};
+
+	const toggleMenu = () => {
+		const toValue = isMenuOpen ? 0 : 1;
+
+		Animated.spring(animation, {
+			toValue,
+			friction: 6,
+			useNativeDriver: true,
+		}).start();
+
+		setIsMenuOpen(!isMenuOpen);
+	};
+
+	const handleAddTransaction = (type: 'income' | 'expense') => {
+		toggleMenu();
+		if (type === 'income') {
+			setShowIncomeModal(true);
+		} else {
+			setShowExpenseModal(true);
+		}
+	};
+
+	// Animasi untuk menu Income dan Expense
+	const menuTranslateY = animation.interpolate({
+		inputRange: [0, 1],
+		outputRange: [100, 0],
+	});
+
+	// Animasi untuk rotasi icon plus
+	const rotation = animation.interpolate({
+		inputRange: [0, 1],
+		outputRange: ['0deg', '45deg'],
+	});
+
+	// Animasi untuk opacity background overlay
+	const backdropOpacity = animation.interpolate({
+		inputRange: [0, 1],
+		outputRange: [0, 0.7],
+	});
+
+	const handleTransactionSuccess = () => {
+		// Refresh data jika diperlukan
+		if (route.name === 'Home' || route.name === 'Transaction') {
+			// Trigger refresh
+		}
 	};
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.navigationBar}>
-				<TouchableOpacity
-					style={styles.iconContainer}
-					onPress={() => animateIcon('home', 'Home')}
-				>
-					<Animated.View style={getAnimatedStyle('home')}>
-						<MaterialCommunityIcons
-							name={route.name === 'Home' ? 'home' : 'home-outline'}
-							size={24}
-							color="#5B37B7"
-						/>
-					</Animated.View>
-				</TouchableOpacity>
+		<>
+			{/* Backdrop overlay */}
+			{isMenuOpen && (
+				<TouchableWithoutFeedback onPress={toggleMenu}>
+					<Animated.View
+						style={[styles.backdrop, { opacity: backdropOpacity }]}
+					/>
+				</TouchableWithoutFeedback>
+			)}
 
-				<TouchableOpacity
-					style={styles.iconContainer}
-					onPress={() => animateIcon('profile', 'Profile')}
-				>
-					<Animated.View style={getAnimatedStyle('profile')}>
-						<MaterialCommunityIcons
-							name={route.name === 'Profile' ? 'account' : 'account-outline'}
-							size={24}
-							color="#5B37B7"
-						/>
-					</Animated.View>
-				</TouchableOpacity>
-
-				<View style={styles.addButtonContainer}>
+			{/* Menu Income dan Expense */}
+			<Animated.View
+				style={[
+					styles.menuContainer,
+					{
+						transform: [{ translateY: menuTranslateY }],
+						opacity: animation,
+					},
+				]}
+			>
+				<View style={styles.menuContent}>
 					<TouchableOpacity
-						style={styles.addButton}
-						onPress={() => {
-							navigation.navigate('Add' as never);
-							// Add button press animation
-							Animated.sequence([
-								Animated.timing(new Animated.Value(1), {
-									toValue: 0.8,
-									duration: 100,
-									useNativeDriver: true,
-								}),
-								Animated.timing(new Animated.Value(0.8), {
-									toValue: 1,
-									duration: 100,
-									useNativeDriver: true,
-								}),
-							]).start();
-						}}
+						style={[styles.menuButton, styles.incomeButton]}
+						onPress={() => handleAddTransaction('income')}
 					>
-						<MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
+						<MaterialCommunityIcons
+							name="cash-plus"
+							size={24}
+							color="#FFFFFF"
+						/>
+						<Text style={styles.menuButtonText}>Income</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={[styles.menuButton, styles.expenseButton]}
+						onPress={() => handleAddTransaction('expense')}
+					>
+						<MaterialCommunityIcons
+							name="cash-minus"
+							size={24}
+							color="#FFFFFF"
+						/>
+						<Text style={styles.menuButtonText}>Expense</Text>
 					</TouchableOpacity>
 				</View>
+			</Animated.View>
 
-				<TouchableOpacity
-					style={styles.iconContainer}
-					onPress={() => animateIcon('chat', 'Chat')}
-				>
-					<Animated.View style={getAnimatedStyle('chat')}>
-						<MaterialCommunityIcons
-							name={route.name === 'Chat' ? 'chat' : 'chat-outline'}
-							size={24}
-							color="#5B37B7"
-						/>
-					</Animated.View>
-				</TouchableOpacity>
+			<View style={styles.container}>
+				<View style={styles.navigationBar}>
+					<TouchableOpacity
+						style={styles.tabItem}
+						onPress={() => navigateTo('Home')}
+					>
+						<View
+							style={[
+								styles.iconContainer,
+								isActive('Home') && styles.activeIcon,
+							]}
+						>
+							<MaterialCommunityIcons
+								name="home"
+								size={22}
+								color={isActive('Home') ? colors.primary.main : '#888'}
+							/>
+						</View>
+						<Text
+							style={[styles.tabLabel, isActive('Home') && styles.activeLabel]}
+						>
+							Home
+						</Text>
+					</TouchableOpacity>
 
-				<TouchableOpacity
-					style={styles.iconContainer}
-					onPress={() => animateIcon('settings', 'Settings')}
-				>
-					<Animated.View style={getAnimatedStyle('settings')}>
-						<MaterialCommunityIcons
-							name={route.name === 'Settings' ? 'cog' : 'cog-outline'}
-							size={24}
-							color="#5B37B7"
-						/>
-					</Animated.View>
-				</TouchableOpacity>
+					<TouchableOpacity
+						style={styles.tabItem}
+						onPress={() => navigateTo('Transaction')}
+					>
+						<View
+							style={[
+								styles.iconContainer,
+								isActive('Transaction') && styles.activeIcon,
+							]}
+						>
+							<MaterialCommunityIcons
+								name="swap-horizontal"
+								size={22}
+								color={isActive('Transaction') ? colors.primary.main : '#888'}
+							/>
+						</View>
+						<Text
+							style={[
+								styles.tabLabel,
+								isActive('Transaction') && styles.activeLabel,
+							]}
+						>
+							Transaction
+						</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={styles.addButtonContainer}
+						onPress={toggleMenu}
+					>
+						<Animated.View
+							style={[styles.addButton, { transform: [{ rotate: rotation }] }]}
+						>
+							<MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+						</Animated.View>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={styles.tabItem}
+						onPress={() => navigateTo('Reports')}
+					>
+						<View
+							style={[
+								styles.iconContainer,
+								isActive('Reports') && styles.activeIcon,
+							]}
+						>
+							<MaterialCommunityIcons
+								name="chart-bar"
+								size={22}
+								color={isActive('Reports') ? colors.primary.main : '#888'}
+							/>
+						</View>
+						<Text
+							style={[
+								styles.tabLabel,
+								isActive('Reports') && styles.activeLabel,
+							]}
+						>
+							Reports
+						</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={styles.tabItem}
+						onPress={() => navigateTo('Category')}
+					>
+						<View
+							style={[
+								styles.iconContainer,
+								isActive('Category') && styles.activeIcon,
+							]}
+						>
+							<MaterialCommunityIcons
+								name="view-grid"
+								size={22}
+								color={isActive('Category') ? colors.primary.main : '#888'}
+							/>
+						</View>
+						<Text
+							style={[
+								styles.tabLabel,
+								isActive('Category') && styles.activeLabel,
+							]}
+						>
+							Category
+						</Text>
+					</TouchableOpacity>
+				</View>
 			</View>
-		</View>
+
+			{/* Modal untuk Income */}
+			<AddTransactionModal
+				visible={showIncomeModal}
+				onClose={() => setShowIncomeModal(false)}
+				transactionType="income"
+				onSuccess={handleTransactionSuccess}
+			/>
+
+			{/* Modal untuk Expense */}
+			<AddTransactionModal
+				visible={showExpenseModal}
+				onClose={() => setShowExpenseModal(false)}
+				transactionType="expense"
+				onSuccess={handleTransactionSuccess}
+			/>
+		</>
 	);
 };
 
@@ -157,47 +265,68 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		bottom: 0,
 		width: width,
-		paddingHorizontal: 16,
-		paddingBottom: 16,
 		backgroundColor: 'transparent',
+		alignItems: 'center',
+		zIndex: 200,
 	},
 	navigationBar: {
 		flexDirection: 'row',
 		backgroundColor: '#FFFFFF',
-		borderRadius: 30,
-		height: 64,
+		height: 70,
 		alignItems: 'center',
 		justifyContent: 'space-around',
-		paddingHorizontal: 16,
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
 		shadowColor: '#000',
 		shadowOffset: {
 			width: 0,
-			height: 4,
+			height: -2,
 		},
 		shadowOpacity: 0.1,
-		shadowRadius: 12,
+		shadowRadius: 8,
 		elevation: 8,
+		paddingBottom: 10,
+		width: width,
+	},
+	tabItem: {
+		flex: 1,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 	iconContainer: {
-		flex: 1,
+		width: 40,
+		height: 40,
 		alignItems: 'center',
 		justifyContent: 'center',
-		height: 48,
+	},
+	activeIcon: {
+		backgroundColor: 'rgba(0, 57, 164, 0.1)',
+		borderRadius: 20,
+		zIndex: 12,
+	},
+	tabLabel: {
+		fontSize: 10,
+		color: '#888',
+		marginTop: 2,
+	},
+	activeLabel: {
+		color: colors.primary.main,
+		fontWeight: '500',
 	},
 	addButtonContainer: {
-		flex: 1,
 		alignItems: 'center',
 		justifyContent: 'center',
-		marginTop: -32,
+		marginTop: -30,
+		zIndex: 200,
 	},
 	addButton: {
-		backgroundColor: '#5B37B7',
+		backgroundColor: colors.primary.light,
 		width: 56,
 		height: 56,
 		borderRadius: 28,
 		alignItems: 'center',
 		justifyContent: 'center',
-		shadowColor: '#5B37B7',
+		shadowColor: colors.primary.light,
 		shadowOffset: {
 			width: 0,
 			height: 4,
@@ -205,6 +334,58 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 8,
 		elevation: 6,
+	},
+	backdrop: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		backgroundColor: '#000',
+		zIndex: 9,
+	},
+	menuContainer: {
+		position: 'absolute',
+		bottom: 90, // Posisi di atas bottom navigation
+		width: width,
+		alignItems: 'center',
+		justifyContent: 'center',
+		zIndex: 11,
+	},
+	menuContent: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+		width: '80%',
+	},
+	menuButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingVertical: 12,
+		paddingHorizontal: 20,
+		borderRadius: 50,
+		marginHorizontal: 10,
+		shadowColor: '#000',
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.3,
+		shadowRadius: 3,
+		elevation: 5,
+	},
+	incomeButton: {
+		backgroundColor: colors.success.main,
+	},
+	expenseButton: {
+		backgroundColor: colors.danger.main,
+	},
+	menuButtonText: {
+		color: '#FFFFFF',
+		fontWeight: '600',
+		fontSize: 14,
+		marginLeft: 8,
 	},
 });
 

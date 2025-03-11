@@ -22,6 +22,14 @@ type TransactionUpdateData = {
 	categoryId?: string;
 };
 
+// Definisikan tipe data untuk ringkasan transaksi
+type TransactionSummary = {
+	totalIncome: number;
+	totalExpense: number;
+	balance: number;
+	recentTransactions: any[];
+};
+
 export const transactionController = {
 	async getAllTransactions(req: Request, res: Response) {
 		try {
@@ -167,6 +175,63 @@ export const transactionController = {
 		} catch (error) {
 			console.error('Error fetching transactions by date range:', error);
 			res.status(500).json({ error: 'Failed to fetch transactions' });
+		}
+	},
+
+	async getTransactionSummary(req: Request, res: Response) {
+		try {
+			const { startDate, endDate } = req.query;
+
+			if (!startDate || !endDate) {
+				return res
+					.status(400)
+					.json({ error: 'Start date and end date are required' });
+			}
+
+			// @ts-ignore
+			const transactions = await prisma.transaction.findMany({
+				where: {
+					date: {
+						gte: new Date(startDate as string),
+						lte: new Date(endDate as string),
+					},
+				},
+				orderBy: {
+					date: 'desc',
+				},
+				// @ts-ignore
+				include: {
+					Category: true,
+				},
+			});
+
+			// Hitung total income dan expense
+			let totalIncome = 0;
+			let totalExpense = 0;
+
+			transactions.forEach((transaction) => {
+				if (transaction.type === 'INCOME') {
+					totalIncome += transaction.amount;
+				} else if (transaction.type === 'EXPENSE') {
+					totalExpense += transaction.amount;
+				}
+			});
+
+			// Hitung balance
+			const balance = totalIncome - totalExpense;
+
+			// Buat objek ringkasan
+			const summary: TransactionSummary = {
+				totalIncome,
+				totalExpense,
+				balance,
+				recentTransactions: transactions,
+			};
+
+			res.json(summary);
+		} catch (error) {
+			console.error('Error fetching transaction summary:', error);
+			res.status(500).json({ error: 'Failed to fetch transaction summary' });
 		}
 	},
 };

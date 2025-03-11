@@ -36,6 +36,7 @@ server/yarn-error.*
 # local env files
 .env*.local
 .env
+!.env.example
 !server/.env
 
 # typescript

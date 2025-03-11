@@ -1,30 +1,30 @@
 export const colors = {
 	// Primary Colors
 	primary: {
-		dark: '#1B3242',    // Dark Teal
-		main: '#234B5E',    // Teal
-		light: '#C1FF3F',   // Neon Green
+		dark: '#0039a4', // Biru tua
+		main: '#0039a4', // Biru tua
+		light: '#7acf23', // Hijau muda
 		surface: '#F4F6F8', // Light Gray
 	},
 
 	// Accent Colors
 	accent: {
-		purple: '#E9DEFF',  // Light Purple
-		green: '#C1FF3F',   // Neon Green
-		teal: '#234B5E',    // Teal
+		purple: '#E9DEFF', // Light Purple
+		green: '#7acf23', // Hijau muda
+		teal: '#00a86b', // Hijau
 	},
 
 	// Status Colors
 	success: {
-		light: '#C1FF3F',   // Neon Green
-		main: '#9FD82B',    // Darker Green
-		dark: '#8AC123',    // Even Darker Green
+		light: '#7acf23', // Hijau muda
+		main: '#00a86b', // Hijau
+		dark: '#00a86b', // Hijau
 		surface: '#F5FFF0',
 	},
 	danger: {
-		light: '#FF6B6B',
-		main: '#FF4949',
-		dark: '#E53E3E',
+		light: '#fd3c4a',
+		main: '#fd3c4a',
+		dark: '#fd3c4a',
 		surface: '#FFF5F5',
 	},
 	warning: {
@@ -35,36 +35,36 @@ export const colors = {
 	},
 
 	// Neutral Colors
-	background: '#F4F6F8',  // Light Gray Background
+	background: '#F4F6F8', // Light Gray Background
 	card: '#FFFFFF',
 	border: '#E1E6EB',
 
 	// Text Colors
 	text: {
-		primary: '#1B3242',   // Dark Teal
-		secondary: '#5A7184', // Medium Gray
-		disabled: '#A3AEB8',  // Light Gray
-		inverse: '#FFFFFF',   // White
+		primary: '#121826', // Hitam
+		secondary: '#8b97a9', // Abu-abu
+		disabled: '#A3AEB8', // Light Gray
+		inverse: '#FFFFFF', // White
 	},
 
 	// Transaction Types
 	transaction: {
 		income: {
-			light: '#C1FF3F',  // Neon Green
-			main: '#9FD82B',   // Darker Green
-			dark: '#8AC123',   // Even Darker Green
+			light: '#7acf23', // Hijau muda
+			main: '#00a86b', // Hijau
+			dark: '#00a86b', // Hijau
 		},
 		expense: {
-			light: '#FF6B6B',
-			main: '#FF4949',
-			dark: '#E53E3E',
+			light: '#fd3c4a',
+			main: '#fd3c4a',
+			dark: '#fd3c4a',
 		},
 	},
 
 	// Card Gradients
 	gradients: {
-		primary: ['#234B5E', '#1B3242'],
-		success: ['#C1FF3F', '#9FD82B'],
-		purple: ['#E9DEFF', '#D4BBFF'],
+		primary: ['#0039a4', '#0039a4'],
+		success: ['#7acf23', '#00a86b'],
+		info: ['#00b6e6', '#00b6e6'],
 	},
 };
